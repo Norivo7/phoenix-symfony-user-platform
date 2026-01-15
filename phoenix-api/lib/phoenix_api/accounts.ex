@@ -17,8 +17,17 @@ defmodule PhoenixApi.Accounts do
       [%User{}, ...]
 
   """
-  def list_users do
-    Repo.all(User)
+  def list_users(params) when is_map(params) do
+    import Ecto.Query, warn: false
+    alias PhoenixApi.Repo
+    alias PhoenixApi.Accounts.User
+
+    params = normalize_params(params)
+
+    User
+    |> apply_filters(params)
+    |> apply_sort(params)
+    |> Repo.all()
   end
 
   @doc """
@@ -101,4 +110,83 @@ defmodule PhoenixApi.Accounts do
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
   end
+
+  defp normalize_params(params) do
+    %{
+      "first_name" => blank_to_nil(params["first_name"]),
+      "last_name" => blank_to_nil(params["last_name"]),
+      "gender" => blank_to_nil(params["gender"]),
+      "birthdate_from" => parse_date(params["birthdate_from"]),
+      "birthdate_to" => parse_date(params["birthdate_to"]),
+      "sort_by" => params["sort_by"] || "id",
+      "sort_dir" => params["sort_dir"] || "asc"
+    }
+  end
+
+  defp blank_to_nil(nil), do: nil
+  defp blank_to_nil(""), do: nil
+  defp blank_to_nil(v), do: v
+
+  defp parse_date(nil), do: nil
+  defp parse_date(""), do: nil
+  defp parse_date(v) do
+    case Date.from_iso8601(v) do
+      {:ok, d} -> d
+      _ -> nil
+    end
+  end
+
+  defp apply_filters(query, params) do
+    import Ecto.Query, warn: false
+
+    query
+    |> maybe_where_ilike(:first_name, params["first_name"])
+    |> maybe_where_ilike(:last_name, params["last_name"])
+    |> maybe_where_eq(:gender, params["gender"])
+    |> maybe_where_date_gte(:birthdate, params["birthdate_from"])
+    |> maybe_where_date_lte(:birthdate, params["birthdate_to"])
+  end
+
+  defp maybe_where_ilike(query, _field, nil), do: query
+  defp maybe_where_ilike(query, field, value) do
+    where(query, [u], ilike(field(u, ^field), ^"%#{value}%"))
+  end
+
+  defp maybe_where_eq(query, _field, nil), do: query
+  defp maybe_where_eq(query, field, value) do
+    where(query, [u], field(u, ^field) == ^value)
+  end
+
+  defp maybe_where_date_gte(query, _field, nil), do: query
+  defp maybe_where_date_gte(query, field, date) do
+    where(query, [u], field(u, ^field) >= ^date)
+  end
+
+  defp maybe_where_date_lte(query, _field, nil), do: query
+  defp maybe_where_date_lte(query, field, date) do
+    where(query, [u], field(u, ^field) <= ^date)
+  end
+
+  @allowed_sort_fields ~w(id first_name last_name birthdate gender inserted_at updated_at)a
+  defp apply_sort(query, %{"sort_by" => sort_by, "sort_dir" => sort_dir}) do
+    import Ecto.Query, warn: false
+
+    field_atom =
+      case sort_by do
+        s when is_binary(s) ->
+          try do
+            String.to_existing_atom(s)
+          rescue
+            _ -> :id
+          end
+
+        _ -> :id
+      end
+
+    field_atom = if field_atom in @allowed_sort_fields, do: field_atom, else: :id
+    dir = if sort_dir == "desc", do: :desc, else: :asc
+
+    order_by(query, [u], [{^dir, field(u, ^field_atom)}])
+  end
+
 end
