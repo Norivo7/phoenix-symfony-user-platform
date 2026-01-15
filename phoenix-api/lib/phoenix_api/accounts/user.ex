@@ -16,6 +16,5 @@ defmodule PhoenixApi.Accounts.User do
     user
     |> cast(attrs, [:first_name, :last_name, :birthdate, :gender])
     |> validate_required([:first_name, :last_name, :birthdate, :gender])
-    |> validate_inclusion(:gender, ["male", "female"])
   end
 end
