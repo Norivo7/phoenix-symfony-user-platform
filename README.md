@@ -5,26 +5,13 @@ consisting of:
 
 - Phoenix (Elixir)
 - Symfony (PHP)
-- Docker Compose 
+- Docker Compose
 
 Symfony follows a DDD-inspired modular structure
 to keep clear boundaries, while the domain and persistence are handled by Phoenix API.
 
 ### Requirements
 Docker + Docker Compose
-
-### Run project
-```bash
-docker compose up -d --build
-```
-
-### After startup
-
-Phoenix API → http://localhost:4000
-
-Symfony frontend → http://localhost:8000
-
-Users GUI → http://localhost:8000/users
 
 ### Configuration
 
@@ -41,6 +28,30 @@ with content:
 APP_SECRET=generated_value_here
 PHOENIX_BASE_URL=http://phoenix:4000
 ```
+
+
+### Run project
+
+1. Build and start containers:
+```bash
+docker compose up -d --build
+```
+
+2. Run database migrations:
+```bash
+docker compose exec phoenix mix ecto.migrate
+```
+
+3. Install Symfony dependencies:
+```bash
+docker compose exec symfony composer install
+```
+
+### After startup
+
+Phoenix API → http://localhost:4000
+
+Symfony frontend → http://localhost:8000/users
 
 ## Import initial data (Phoenix)
 
