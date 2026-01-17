@@ -14,12 +14,13 @@ Generate it locally:
 ```bash
 php -r 'echo bin2hex(random_bytes(16)).PHP_EOL;'
 ```
-rename ```.env.example``` to ```.env.local```
 
-and paste generated value
+paste generated value in ```.env.example```
 ```dotenv
 APP_SECRET=generated_value_here
 ```
+
+then rename ```.env.example``` to ```.env.local```
 
 ### Run project
 
@@ -114,4 +115,80 @@ CSV files are stored locally in``` phoenix-api/priv/pesel/```
 to clear users data in Phoenix DB:
 ```bash
 docker compose exec db psql -U morizon -d morizon -c "TRUNCATE users RESTART IDENTITY;"```
+```
+
+### Curl examples
+
+#### List users
+```bash
+curl -i http://localhost:4000/api/users
+```
+
+#### Filtering
+```bash
+curl -i "http://localhost:4000/api/users?first_name=ANNA"
+curl -i "http://localhost:4000/api/users?last_name=NOWAK"
+curl -i "http://localhost:4000/api/users?gender=female"
+```
+
+#### Date range filter
+```bash
+curl -i "http://localhost:4000/api/users?birthdate_from=1980-01-01&birthdate_to=1990-12-31"
+```
+
+#### Sorting
+```bash
+curl -i "http://localhost:4000/api/users?sort_by=last_name&sort_dir=asc"
+curl -i "http://localhost:4000/api/users?sort_by=birthdate&sort_dir=desc"
+```
+
+#### Create user
+```bash
+curl -i -X POST http://localhost:4000/api/users \
+    -H "Content-Type: application/json" \
+    -d '{
+        "user": {
+            "first_name": "Jan",
+            "last_name": "Kowalski",
+            "gender": "male",
+            "birthdate": "1985-06-15"
+        }
+    }'
+```
+
+#### Get user details
+```bash
+curl -i http://localhost:4000/api/users/1
+```
+
+#### User not found (404 example)
+```bash
+curl -i http://localhost:4000/api/users/999999
+```
+
+#### Update user
+```bash
+curl -i -X PUT http://localhost:4000/api/users/1 \
+    -H "Content-Type: application/json" \
+    -d '{
+        "user": {
+          "last_name": "Nowak"
+        }
+    }'
+```
+
+#### Delete user
+```bash
+curl -i -X DELETE http://localhost:4000/api/users/1
+```
+
+#### Import users (token protected)
+```bash
+curl -i -X POST http://localhost:4000/api/import \
+-H "x-api-token: change_me"
+```
+
+#### Import without token (expected 401)
+```bash 
+curl -i -X POST http://localhost:4000/api/import
 ```
