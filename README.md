@@ -21,18 +21,16 @@ Generate it locally:
 ```bash
 php -r 'echo bin2hex(random_bytes(16)).PHP_EOL;'
 ```
-Create file ```symfony-app/.env.local```
+rename ```.env.example``` to ```.env.local```
 
-with content:
+and paste generated value
 ```dotenv
 APP_SECRET=generated_value_here
-PHOENIX_BASE_URL=http://phoenix:4000
 ```
-
 
 ### Run project
 
-1. Build and start containers:
+1. Go to the project root (``` /morizon-gratka```), build and start containers:
 ```bash
 docker compose up -d --build
 ```
