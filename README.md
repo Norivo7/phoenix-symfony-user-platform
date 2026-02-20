@@ -1,4 +1,4 @@
-## Morizon–Gratka Recruitment Task
+## phoenix-symfony-user-platform
 
 
 Symfony uses a DDD-inspired modular structure (Application / Infrastructure / UI),
